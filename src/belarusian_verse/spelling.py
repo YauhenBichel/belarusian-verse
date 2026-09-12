@@ -54,6 +54,29 @@ def rhyme_key(line):
     return ""
 
 
+def short_u_issues(line):
+    """The у/ў rule between words: after a vowel it is ў, otherwise у.
+
+    "Я іду ў школу", never "іду у школу"; "стаў у хаце", never "стаў ў хаце". The rule holds
+    across the whole line, which is why a word-by-word checker never sees it. After a full stop,
+    a question or exclamation mark the pause resets it and у stays у.
+    """
+    issues = []
+    tokens = re.findall(r"[^\W\d_]+|[.!?…]", line.lower())
+    previous = None
+    for token in tokens:
+        if token in ".!?…":
+            previous = None
+            continue
+        if token == "у" and previous and previous[-1] in VOWELS:
+            issues.append(("ERROR", "SHOULD_BE_U_SHORT", f"у after «{previous}» should be ў"))
+        elif token == "ў" and (previous is None or previous[-1] not in VOWELS):
+            after = f"after «{previous}»" if previous else "at the start"
+            issues.append(("ERROR", "SHOULD_BE_U_LONG", f"ў {after} should be у"))
+        previous = token
+    return issues
+
+
 def check_text(text, syllables_per_line=None, rhyme=None, dictionary=None, tolerance=0):
     sections, lines = [[]], []
     for n, raw in enumerate(text.splitlines(), 1):
@@ -63,9 +86,11 @@ def check_text(text, syllables_per_line=None, rhyme=None, dictionary=None, toler
         if line.startswith("["):
             sections.append([])
             continue
+        line = line.split("|")[0].strip()  # bilingual lyrics: judge the Belarusian half
         entry = {"n": n, "text": line, "syllables": syllables(line), "issues": []}
         for word in WORD_RE.findall(line):
             entry["issues"] += [dict(level=l, code=c, word=w) for l, c, w in word_issues(word, dictionary)]
+        entry["issues"] += [dict(level=l, code=c, word=w) for l, c, w in short_u_issues(line)]
         if syllables_per_line and abs(entry["syllables"] - syllables_per_line) > tolerance:
             want = f"{syllables_per_line}±{tolerance}" if tolerance else str(syllables_per_line)
             entry["issues"].append(dict(level="ERROR", code="SYLLABLES",
@@ -101,7 +126,7 @@ def _utf8_stdout():
     try:
         sys.stdout.reconfigure(encoding="utf-8")
         sys.stderr.reconfigure(encoding="utf-8")
-    except (AttributeError, OSError):  # already redirected, or an unusual stream
+    except (AttributeError, OSError):
         pass
 
 

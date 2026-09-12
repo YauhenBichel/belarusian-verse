@@ -15,13 +15,14 @@ The tables behind it — about 2 million word forms — are published separately
 and downloaded on first use.
 
 ```python
-from belarusian_verse import mark_stress, rhyme, check_agreement, check_spelling
+from belarusian_verse import mark_stress, rhyme, suggest_rhymes, check_agreement
 
 mark_stress("Побач ты, і добра мне")      # 'По́бач ты, і до́бра мне'
 rhyme("вадзе", "ідзе")                    # ('rich', 1.0)
 rhyme("ідзе", "знайдзе")                  # ('none', 0.0)  — зна́йдзе is stressed at the start
 check_agreement("тваіх вачам")["errors"]  # 1  — no shared case
-check_agreement("тваім вачам")["errors"]  # 0
+check_agreement("Яна ідуць")["errors"]    # 1  — singular subject, plural verb
+suggest_rhymes("вадзе")[:4]               # what *would* rhyme, commonest first
 ```
 
 ## Why
@@ -57,8 +58,9 @@ Set `BELARUSIAN_VERSE_DATA` to a folder holding the tables to work offline.
 | `check_agreement(text)` | Does each adjective match its noun in gender, case and number? |
 | `check_spelling(text, dictionary=…)` | Real Belarusian words, correct orthography, syllable counts |
 | `respell(text, "uk"\|"ru")` | Rewrite Belarusian so a Ukrainian- or Russian-trained model pronounces it, syllable count unchanged |
+| `suggest_rhymes(word)` | Words that rhyme with it, commonest first — rhyme as help, not just a verdict |
 
-Each is also a command: `be-stress`, `be-poetry`, `be-grammar`, `be-spelling`, `be-respell`.
+Each is also a command: `be-stress`, `be-poetry`, `be-grammar`, `be-spelling`, `be-respell`, `be-rhymes`.
 
 ```bash
 $ be-poetry verse.txt --rhyme AABB
@@ -67,6 +69,16 @@ $ be-poetry verse.txt --rhyme AABB
 rhyme 1-2: rich (1.0)
 rhyme 0.95  rhythm 0.78
 ```
+
+## What it checks that a spell checker cannot
+
+- **Agreement.** An adjective must match its noun in gender, case and number, on either side of it
+  («цёплы вечар», «свежасць ранішняя»); a verb must match its subject in person and number, or in
+  gender for the past tense («яна спявала», «яны спявалі»).
+- **The у/ў rule between words.** `у` becomes `ў` after a vowel — «Я іду **ў** школу» — and stays
+  `у` after a consonant. The decision lives in the gap between two words, so no word-by-word
+  checker can see it.
+- **Rhyme and rhythm**, from the stressed vowel, not from the final letters.
 
 ## How rhyme is judged
 
@@ -89,6 +101,9 @@ before comparison, as they are when sung.
 - Agreement checking looks at adjacent adjective/pronoun and noun pairs on either side, not at full
   syntax; it finds the common errors, not every possible one.
 - Meaning is not checked at all. A line can pass every check here and still say nothing.
+- Preposition government (`да` wants the genitive, `у` the accusative or locative) is not checked.
+- Rhyme suggestions are ranked by Wikipedia frequency, which leans encyclopaedic: place names are
+  commoner there than in song.
 
 ## Data and licence
 

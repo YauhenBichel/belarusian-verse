@@ -14,6 +14,8 @@ FILES = {
     "stress": "data/be-stress.tsv.gz",
     "forms": "data/be-forms.tsv.gz",
     "overrides": "data/stress-overrides.tsv",
+    "rhymes": "data/be-rhymes.tsv.gz",
+    "frequency": "data/be-freq.tsv.gz",
     "hunspell_dic": "data/hunspell/be-official.dic",
     "hunspell_aff": "data/hunspell/be-official.aff",
 }

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "belarusian-verse"
-version = "0.1.0"
+version = "0.2.0"
 description = "Belarusian stress, rhyme, rhythm and agreement checking, built on the Belarusian Grammar Database"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -34,6 +34,7 @@ be-poetry = "belarusian_verse.poetry:main"
 be-grammar = "belarusian_verse.grammar:main"
 be-spelling = "belarusian_verse.spelling:main"
 be-respell = "belarusian_verse.respell:main"
+be-rhymes = "belarusian_verse.rhymes:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/belarusian_verse"]

@@ -4,6 +4,7 @@
 
     mark_stress("побач")                       # 'по́бач'
     rhyme("вадзе", "ідзе")                     # ('rich', 1.0)
+    suggest_rhymes("вадзе")[:3]                # what would rhyme, commonest first
     check_agreement("тваіх вачам")["errors"]   # 1
 
 The tables behind these (about 2 million word forms) are downloaded once from
@@ -13,10 +14,11 @@ from .data import DATASET, table
 from .grammar import agrees, check_text as check_agreement, load_index
 from .poetry import analyse as analyse_verse, grade_rhyme, rhyme_tail, syllable_stress
 from .respell import respell
+from .rhymes import load_frequency, load_rhymes, suggest as suggest_rhymes
 from .spelling import check_text as check_spelling, load_dictionary, syllables
 from .stress import load_lexicon, mark_text, mark_word
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 __all__ = [
     "DATASET", "table",
     "mark_stress", "mark_text", "mark_word", "load_lexicon",
@@ -24,6 +26,7 @@ __all__ = [
     "check_agreement", "agrees", "load_index",
     "check_spelling", "load_dictionary", "syllables",
     "respell",
+    "suggest_rhymes", "load_rhymes", "load_frequency",
 ]
 
 _lexicon = None

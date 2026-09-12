@@ -22,11 +22,18 @@ import sys
 from .data import table
 
 WORD_RE = re.compile(r"[^\W\d_]+(?:['’\-][^\W\d_]+)*", re.UNICODE)
+
 # personal pronouns stand next to nouns without modifying them
 PERSONAL = {"я", "мяне", "мне", "мной", "мною", "ты", "цябе", "табе", "табой", "тобой",
             "ён", "яго", "яму", "ім", "яна", "яе", "ёй", "яно", "мы", "нас", "нам", "намі",
             "вы", "вас", "вам", "вамі", "яны", "іх", "ім", "імі", "сябе", "сабе", "сабой"}
 MODIFIERS = {"A", "S"}  # adjectives and adjective-like pronouns (мой, твой, гэты …)
+# personal pronouns as subjects: person, number, gender (for the past tense, which has no person)
+SUBJECTS = {
+    "я": ("1", "S", "0"), "ты": ("2", "S", "0"), "ён": ("3", "S", "M"),
+    "яна": ("3", "S", "F"), "яно": ("3", "S", "N"),
+    "мы": ("1", "P", "0"), "вы": ("2", "P", "0"), "яны": ("3", "P", "0"),
+}
 
 
 def load_index(path=None):
@@ -74,9 +81,47 @@ def order(a, b, words, index):
     return None
 
 
+def verb_fits_subject(verb_readings, subject):
+    """Does any reading of the verb go with this pronoun?
+
+    Present, future and imperative carry a person: «я іду», never «я ідуць». The past tense has no
+    person but does have gender and number: «яна спявала», «яны спявалі», never «яна спявалі».
+    """
+    person, number, gender = subject
+    for _pos, g, p, n in verb_readings:
+        if p == "0":                      # infinitive: goes with anything
+            return True
+        if p == "P":                      # past: gender and number
+            if n == number and (gender == "0" or g == "0" or g == gender):
+                return True
+        elif p == person and n == number:  # present, future, imperative
+            return True
+    return False
+
+
+def check_subject_verb(words, index):
+    """«Яна ідуць» — a pronoun next to a verb that cannot belong to it."""
+    issues = []
+    for first, second in zip(words, words[1:]):
+        for subject_word, verb_word in ((first, second), (second, first)):
+            subject = SUBJECTS.get(subject_word.lower())
+            readings = index.get(verb_word.lower().replace("’", "'"), ())
+            verb = tuple(c for c in readings if c[0] == "V")
+            # only when the other word is unmistakably a verb, so nouns spelled alike stay quiet
+            if not subject or not verb or len(verb) != len(readings):
+                continue
+            if not verb_fits_subject(verb, subject):
+                issues.append({"words": f"{first} {second}",
+                               "modifier": [f"{subject[0]}:{subject[1]}"],
+                               "noun": sorted({":".join(c[1:]) for c in verb})})
+            break
+    return issues
+
+
 def check_line(line, index):
     issues = []
     words = [w for w in WORD_RE.findall(line)]
+    issues += check_subject_verb(words, index)
     for first, second in zip(words, words[1:]):
         a, b = first.lower().replace("’", "'"), second.lower().replace("’", "'")
         if a in PERSONAL or b in PERSONAL or a not in index or b not in index:
@@ -114,7 +159,7 @@ def _utf8_stdout():
     try:
         sys.stdout.reconfigure(encoding="utf-8")
         sys.stderr.reconfigure(encoding="utf-8")
-    except (AttributeError, OSError):  # already redirected, or an unusual stream
+    except (AttributeError, OSError):
         pass
 
 
