@@ -1,4 +1,5 @@
 """The public API, against the real published tables (downloaded on first run)."""
+import os
 import unittest
 
 from belarusian_verse import (analyse_verse, check_agreement, check_spelling, mark_stress,
@@ -38,3 +39,30 @@ class PublicApiTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ConsoleTests(unittest.TestCase):
+    """The commands print Belarusian, which a Windows console cannot encode by default."""
+
+    def test_commands_write_cyrillic_to_a_non_utf8_stdout(self):
+        import subprocess
+        import sys
+        import tempfile
+
+        with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False, encoding="utf-8") as fh:
+            fh.write("Жоўты ліст плыве па вадзе,\nПобач ты, і восень ідзе.\n")
+            path = fh.name
+        for command in ("be-stress", "be-poetry", "be-grammar", "be-respell"):
+            with self.subTest(command=command):
+                argv = [command, path] + (["--target", "uk"] if command == "be-respell" else [])
+                argv += ["--rhyme", "AA"] if command == "be-poetry" else []
+                # PYTHONIOENCODING=cp1252 reproduces a Windows console on any platform
+                run = subprocess.run(argv, capture_output=True,
+                                     env={"PATH": os.path.dirname(sys.executable) + os.pathsep
+                                          + os.environ.get("PATH", ""),
+                                          "PYTHONIOENCODING": "cp1252",
+                                          "HOME": os.environ.get("HOME", ""),
+                                          "USERPROFILE": os.environ.get("USERPROFILE", ""),
+                                          "BELARUSIAN_VERSE_DATA": os.environ.get("BELARUSIAN_VERSE_DATA", "")})
+                self.assertEqual(run.returncode, 0, run.stderr.decode("utf-8", "replace")[-400:])
+                self.assertIn("вадзе".encode("utf-8"), run.stdout)
