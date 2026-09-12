@@ -5,13 +5,31 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 
-from belarusian_verse.spelling import check_text, load_dictionary, rhyme_key, syllables  # noqa: E402
+from belarusian_verse.spelling import short_u_issues, check_text, load_dictionary, rhyme_key, syllables  # noqa: E402
 
 SAMPLES = ROOT / "experiments" / "2026-09-11-belarusian-lyrics" / "samples"
 
 
 def codes(result):
     return {(i["code"], i["word"]) for e in result["lines"] for i in e["issues"]}
+
+
+class ShortUTests(unittest.TestCase):
+    """The у/ў rule runs between words, so only a whole-line check can see it."""
+
+    def codes(self, line):
+        return {code for _level, code, _word in short_u_issues(line)}
+
+    def test_u_after_a_vowel_must_be_short(self):
+        self.assertIn("SHOULD_BE_U_SHORT", self.codes("Я іду у школу"))
+        self.assertEqual(self.codes("Я іду ў школу"), set())
+
+    def test_u_after_a_consonant_stays_long(self):
+        self.assertEqual(self.codes("Стаў у хаце"), set())
+        self.assertIn("SHOULD_BE_U_LONG", self.codes("Стаў ў хаце"))
+
+    def test_a_full_stop_resets_the_rule(self):
+        self.assertEqual(self.codes("Дождж ідзе. У хаце цёпла"), set())
 
 
 class RuleTests(unittest.TestCase):

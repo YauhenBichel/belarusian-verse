@@ -60,6 +60,17 @@ class RealSentenceTests(unittest.TestCase):
     def test_a_broken_pair_is_reported_once(self):
         self.assertEqual(self.errors("Сэрца б’ецца ў такт тваіх вачам"), 1)
 
+    def test_subject_and_verb_must_agree(self):
+        self.assertEqual(self.errors("Яна ідуць дадому"), 1)
+        self.assertEqual(self.errors("Яна ідзе дадому"), 0)
+        self.assertEqual(self.errors("Мы танцуе да раніцы"), 1)
+        self.assertEqual(self.errors("Мы танцуем да раніцы"), 0)
+
+    def test_past_tense_agrees_in_gender(self):
+        self.assertEqual(self.errors("Яна спявалі песню"), 1)
+        self.assertEqual(self.errors("Яна спявала песню"), 0)
+        self.assertEqual(self.errors("Яны спявалі песню"), 0)
+
     def test_adverb_lookalike_is_not_a_false_alarm(self):
         # "тут" is an adverb here, though GrammarDB also lists a rare noun spelled the same
         self.assertEqual(self.errors("Свежасць ранішняя тут жыве"), 0)
