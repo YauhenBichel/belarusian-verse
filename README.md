@@ -1,7 +1,18 @@
 # belarusian-verse
 
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](./LICENSE)
+[![PyPI](https://img.shields.io/pypi/v/belarusian-verse.svg)](https://pypi.org/project/belarusian-verse/)
+[![CI](https://github.com/YauhenBichel/belarusian-verse/actions/workflows/ci.yml/badge.svg)](https://github.com/YauhenBichel/belarusian-verse/actions/workflows/ci.yml)
+[![Dataset](https://img.shields.io/badge/%F0%9F%A4%97%20dataset-belarusian--verse-yellow)](https://huggingface.co/datasets/YauhenBichel/belarusian-verse)
+[![Data licence](https://img.shields.io/badge/data-CC%20BY--SA%204.0-lightgrey)](https://huggingface.co/datasets/YauhenBichel/belarusian-verse)
+[![Contributors](https://img.shields.io/github/contributors/YauhenBichel/belarusian-verse)](https://github.com/YauhenBichel/belarusian-verse/graphs/contributors)
+
 Belarusian **stress, rhyme, rhythm, agreement and spelling** — the checks you need to write or
 judge a line of Belarusian verse, as a small Python library.
+
+The tables behind it — about 2 million word forms — are published separately as
+[🤗 **YauhenBichel/belarusian-verse**](https://huggingface.co/datasets/YauhenBichel/belarusian-verse)
+and downloaded on first use.
 
 ```python
 from belarusian_verse import mark_stress, rhyme, check_agreement, check_spelling

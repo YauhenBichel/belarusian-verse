@@ -1,0 +1,37 @@
+cff-version: 1.2.0
+message: If you use belarusian-verse, please cite it and the Grammar Database it is built on.
+type: software
+title: belarusian-verse
+abstract: >-
+  Belarusian stress, rhyme, rhythm and agreement checking. Belarusian has no
+  rhyme dictionary in software and no grammar checker with morphology; the
+  material for both was already in the Belarusian Grammar Database. This
+  library turns it into checks: where the stress falls, whether two lines
+  rhyme from the stressed vowel on, and whether an adjective agrees with its
+  noun in gender, case and number.
+authors:
+  - family-names: Bichel
+    given-names: Yauhen
+    website: https://github.com/YauhenBichel
+repository-code: https://github.com/YauhenBichel/belarusian-verse
+license: Apache-2.0
+date-released: "2026-09-12"
+keywords:
+  - belarusian
+  - stress
+  - rhyme
+  - poetry
+  - morphology
+  - agreement
+  - lyrics
+references:
+  - type: database
+    title: Belarusian Grammar Database (GrammarDB)
+    authors:
+      - family-names: Bułojčyk
+        given-names: Aleś
+      - family-names: Koščanka
+        given-names: Uładzimir
+    repository-code: https://github.com/Belarus/GrammarDB
+    url: https://bnkorpus.info/grammar.html
+    license: CC-BY-SA-4.0

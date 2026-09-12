@@ -1,0 +1,18 @@
+belarusian-verse
+Copyright 2026 Yauhen Bichel
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This library downloads data it does not distribute:
+
+- Belarusian stress and morphology tables, and the Belarusian Hunspell
+  spelling dictionary for the 2008 orthography — CC BY-SA 4.0, derived from
+  the Belarusian Grammar Database (GrammarDB) by Aleś Bułojčyk and
+  Uładzimir Koščanka.
+  https://github.com/Belarus/GrammarDB
+  https://bnkorpus.info/grammar.html
+  Published as https://huggingface.co/datasets/YauhenBichel/belarusian-verse
+
+  The tables are share-alike: a derivative of the DATA must stay CC BY-SA 4.0
+  and keep this attribution. The CODE in this repository is Apache-2.0 and is
+  not a derivative of the data.
