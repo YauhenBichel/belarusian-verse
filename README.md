@@ -15,7 +15,7 @@ The tables behind it — about 2 million word forms — are published separately
 and downloaded on first use.
 
 ```python
-from belarusian_verse import mark_stress, rhyme, check_agreement, check_spelling
+from belarusian_verse import mark_stress, rhyme, suggest_rhymes, check_agreement
 
 mark_stress("Побач ты, і добра мне")      # 'По́бач ты, і до́бра мне'
 rhyme("вадзе", "ідзе")                    # ('rich', 1.0)
