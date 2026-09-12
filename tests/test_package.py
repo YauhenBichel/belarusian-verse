@@ -56,13 +56,12 @@ class ConsoleTests(unittest.TestCase):
             with self.subTest(command=command):
                 argv = [command, path] + (["--target", "uk"] if command == "be-respell" else [])
                 argv += ["--rhyme", "AA"] if command == "be-poetry" else []
-                # PYTHONIOENCODING=cp1252 reproduces a Windows console on any platform
-                run = subprocess.run(argv, capture_output=True,
-                                     env={"PATH": os.path.dirname(sys.executable) + os.pathsep
-                                          + os.environ.get("PATH", ""),
-                                          "PYTHONIOENCODING": "cp1252",
-                                          "HOME": os.environ.get("HOME", ""),
-                                          "USERPROFILE": os.environ.get("USERPROFILE", ""),
-                                          "BELARUSIAN_VERSE_DATA": os.environ.get("BELARUSIAN_VERSE_DATA", "")})
+                # PYTHONIOENCODING=cp1252 reproduces a Windows console on any platform.
+                # Keep the rest of the environment: on Windows, stripping it breaks the socket
+                # layer (WinError 10106) before the command even starts.
+                env = dict(os.environ)
+                env["PYTHONIOENCODING"] = "cp1252"
+                env["PATH"] = os.path.dirname(sys.executable) + os.pathsep + env.get("PATH", "")
+                run = subprocess.run(argv, capture_output=True, env=env)
                 self.assertEqual(run.returncode, 0, run.stderr.decode("utf-8", "replace")[-400:])
                 self.assertIn("вадзе".encode("utf-8"), run.stdout)
