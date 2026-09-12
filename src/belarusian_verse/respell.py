@@ -69,7 +69,17 @@ def syllables(text):
     return sum(c in COUNT_VOWELS for c in text.lower())
 
 
+def _utf8_stdout():
+    """Windows consoles default to cp1252, which cannot encode Cyrillic at all."""
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except (AttributeError, OSError):  # already redirected, or an unusual stream
+        pass
+
+
 def main():
+    _utf8_stdout()
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument("--target", required=True, choices=["uk", "ru"])
     p.add_argument("file", nargs="?")

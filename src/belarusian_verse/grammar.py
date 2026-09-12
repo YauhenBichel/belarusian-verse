@@ -109,7 +109,17 @@ def check_text(text, index=None):
     return {"lines": lines, "errors": errors, "pass": errors == 0}
 
 
+def _utf8_stdout():
+    """Windows consoles default to cp1252, which cannot encode Cyrillic at all."""
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except (AttributeError, OSError):  # already redirected, or an unusual stream
+        pass
+
+
 def main():
+    _utf8_stdout()
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument("file")
     p.add_argument("--index", help="a be-forms.tsv.gz; defaults to the published table")

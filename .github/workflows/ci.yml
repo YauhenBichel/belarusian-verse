@@ -36,11 +36,13 @@ jobs:
       - name: Tests
         run: python -m unittest discover -s tests -q
 
-      # Proves the commands work with no PYTHONPATH and no repository paths.
+      # Proves the commands work with no PYTHONPATH and no repository paths, and that a
+      # Belarusian line survives the console encoding (Windows defaults to cp1252).
       - name: Installed commands
         shell: bash
         run: |
-          echo "Побач ты, і добра мне" > line.txt
-          be-stress line.txt
-          be-grammar line.txt
-          be-poetry line.txt --rhyme A
+          printf '%s\n%s\n' 'Жоўты ліст плыве па вадзе,' 'Побач ты, і восень ідзе.' > verse.txt
+          be-stress verse.txt --report
+          be-grammar verse.txt          # exits non-zero if an adjective disagrees
+          be-poetry verse.txt --rhyme AA  # exits non-zero if the rhyme or rhythm is weak
+          be-respell verse.txt --target uk
