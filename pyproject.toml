@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "belarusian-verse"
-version = "0.2.0"
+version = "0.3.0"
 description = "Belarusian stress, rhyme, rhythm and agreement checking, built on the Belarusian Grammar Database"
 readme = "README.md"
 requires-python = ">=3.10"

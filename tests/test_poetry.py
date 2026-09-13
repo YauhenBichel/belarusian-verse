@@ -68,5 +68,39 @@ class RhymeTests(unittest.TestCase):
         self.assertEqual(len(result["lines"]), 2)
 
 
+# «Дарога», chorus and verse: lines 2/4 and 6/8 rhyme
+SONG = """[Прыпеў]
+Дарога, дарога,
+Вядзі нас далей,
+Дзе неба шырэй
+І сэрцу лягчэй.
+[Куплет]
+Сонца ўстае над полем,
+Мякка шуміць матор,
+Кава яшчэ гарачая,
+Наперадзе — прастор."""
+
+
+class SchemeTests(unittest.TestCase):
+    """A scheme shorter than the song repeats for each stanza."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.lex = load_lexicon()
+
+    def pairs(self, scheme):
+        return [p["lines"] for p in analyse(SONG, scheme, self.lex)["rhyme_pairs"]]
+
+    def test_abcb_pairs_within_each_stanza(self):
+        self.assertEqual(self.pairs("ABCB"), [[2, 4], [6, 8]])
+
+    def test_aabb_repeats_as_couplets(self):
+        self.assertEqual(self.pairs("AABB"), [[1, 2], [3, 4], [5, 6], [7, 8]])
+
+    def test_the_verse_rhyme_is_graded_on_its_own_lines(self):
+        verse = [p for p in analyse(SONG, "ABCB", self.lex)["rhyme_pairs"] if p["lines"] == [6, 8]][0]
+        self.assertGreater(verse["score"], 0.5)   # матор / прастор
+
+
 if __name__ == "__main__":
     unittest.main()

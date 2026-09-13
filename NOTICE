@@ -16,3 +16,13 @@ This library downloads data it does not distribute:
   The tables are share-alike: a derivative of the DATA must stay CC BY-SA 4.0
   and keep this attribution. The CODE in this repository is Apache-2.0 and is
   not a derivative of the data.
+
+- The most frequent stress of common homographs, stresses-stat.json from
+  BelVoice by Aleś Bułojčyk and contributors — LGPL-3.0-or-later. Downloaded
+  unmodified at run time from commit 60401e614210f8788d13cbfd9df6bb4726845c38
+  of https://github.com/Belarus/BelVoice; not included in this package.
+
+- The Belarusian Homographs Stress Benchmark, created for BelVoice by Aleś
+  Bułojčyk and contributors — CC BY-SA 4.0. Downloaded by stress_benchmark.py
+  at revision 94bb5a86120feb531107132eef7466c399420c18 of
+  https://huggingface.co/datasets/alex73/benchmarks-stress-bel; not included.
