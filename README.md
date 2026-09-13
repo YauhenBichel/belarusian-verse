@@ -46,7 +46,8 @@ pip install belarusian-verse            # tables download on first use, then cac
 pip install "belarusian-verse[spelling]"  # adds the spell checker (spylls)
 ```
 
-Set `BELARUSIAN_VERSE_DATA` to a folder holding the tables to work offline.
+Set `BELARUSIAN_VERSE_DATA` to a folder holding the tables to work offline. Put BelVoice's
+`stresses-stat.json` there too for homograph stress; without it homographs keep GrammarDB's order.
 
 ## What it does
 
@@ -56,7 +57,7 @@ Set `BELARUSIAN_VERSE_DATA` to a folder holding the tables to work offline.
 | `rhyme(a, b)` | Do these rhyme, and how well: rich / exact / near / none |
 | `analyse_verse(text, "AABB")` | Rhyme and rhythm scores for a whole verse, line by line |
 | `check_agreement(text)` | Does each adjective match its noun in gender, case and number? |
-| `check_spelling(text, dictionary=…)` | Real Belarusian words, correct orthography, syllable counts |
+| `check_spelling(text, dictionary=…, forms=…)` | Real Belarusian words, correct orthography, syllable counts |
 | `respell(text, "uk"\|"ru")` | Rewrite Belarusian so a Ukrainian- or Russian-trained model pronounces it, syllable count unchanged |
 | `suggest_rhymes(word)` | Words that rhyme with it, commonest first — rhyme as help, not just a verdict |
 
@@ -79,6 +80,12 @@ rhyme 0.95  rhythm 0.78
   `у` after a consonant. The decision lives in the gap between two words, so no word-by-word
   checker can see it.
 - **Rhyme and rhythm**, from the stressed vowel, not from the final letters.
+- **Spelling, with the dictionary's gaps marked as gaps.** The bundled Hunspell dictionary is
+  GrammarDB's own 2008-spelling export, which leaves out forms whose only source is Піскуноў 2012
+  («слухаўка») and adjectives from place names («смаленская»). Pass `forms=load_index()` and a word
+  the dictionary rejects but GrammarDB lists is a warning (`NOT_IN_2008_LIST`) instead of an
+  `UNKNOWN_WORD` error. By default `forms` is not loaded and the old rule holds; `extra-words.txt`
+  still accepts its words outright.
 
 ## How rhyme is judged
 
@@ -86,6 +93,28 @@ A Belarusian rhyme matches from the **last stressed vowel** to the end of the li
 table does the real work. `маёй` and `спакой` rhyme (iotated vowels are folded: `ёй` = `ой`);
 `ідзе́` and `зна́йдзе` do not, because the stress sits elsewhere. Final consonants are devoiced
 before comparison, as they are when sung.
+
+A scheme shorter than the verse repeats for each stanza: `ABCB` over eight lines pairs 2–4 and 6–8,
+and `AABB` pairs 1–2, 3–4, 5–6, 7–8.
+
+## Homograph stress
+
+GrammarDB lists the stresses of a homograph in no particular order. Where one reading must be
+chosen (`pick_first=True`, and rhyme and rhythm in `analyse_verse`), the library puts first the most
+frequent stress from [BelVoice](https://github.com/Belarus/BelVoice)'s table of common homographs,
+when that stress is one GrammarDB lists. On the
+[Belarusian Homographs Stress Benchmark](https://huggingface.co/datasets/alex73/benchmarks-stress-bel)
+(`python -m belarusian_verse.stress_benchmark`), share of homograph tokens stressed right:
+
+| Set | GrammarDB order | BelVoice first |
+|---|---|---|
+| Common Voice sentences | 48.9 % | 82.9 % |
+| «Засценак Малінаўка» (literary) | 24.9 % | 68.8 % |
+| 10×10 (every stress equally often) | 50.0 % | 50.0 % |
+
+10×10 is built so that frequency alone cannot win; only context could. If BelVoice's table cannot be
+downloaded, homographs silently keep GrammarDB's order. `load_lexicon(homographs="")` asks for that
+order explicitly.
 
 ## Two Belarusian rules this encodes
 
@@ -96,8 +125,10 @@ before comparison, as they are when sung.
 
 ## Limits
 
-- Homographs are not disambiguated by context: 20,754 forms carry more than one stress. Pass your
-  own overrides file, or `pick_first=True` to accept the first reading.
+- Homographs are not disambiguated by context: 20,754 forms carry more than one stress, and
+  `mark_stress` leaves them unmarked. Pass your own overrides file, or `pick_first=True` to accept
+  the most frequent reading — wrong about one time in six in ordinary sentences, and about one in
+  three in literary text.
 - Agreement checking looks at adjacent adjective/pronoun and noun pairs on either side, not at full
   syntax; it finds the common errors, not every possible one.
 - Meaning is not checked at all. A line can pass every check here and still say nothing.
@@ -111,6 +142,16 @@ The code is **Apache-2.0**. The tables it downloads are **CC BY-SA 4.0**, derive
 Belarusian Grammar Database by Aleś Bułojčyk and Uładzimir Koščanka — if you redistribute the data
 or a derivative of it, keep that licence and the attribution:
 https://huggingface.co/datasets/YauhenBichel/belarusian-verse
+
+Two more sources are downloaded at run time and never shipped with the package:
+
+- **BelVoice's `stresses-stat.json`** (most frequent stress of common homographs), by Aleś Bułojčyk
+  and contributors, **LGPL-3.0-or-later**, fetched from
+  [a pinned commit](https://github.com/Belarus/BelVoice/blob/60401e614210f8788d13cbfd9df6bb4726845c38/framework/belvoice/synth/stress/stresses-stat.json)
+  and checked against its SHA-256.
+- **The Belarusian Homographs Stress Benchmark**, used only by `stress_benchmark`, created for
+  BelVoice by Aleś Bułojčyk and contributors, **CC BY-SA 4.0**:
+  https://huggingface.co/datasets/alex73/benchmarks-stress-bel (revision `94bb5a8`).
 
 ## Tests
 

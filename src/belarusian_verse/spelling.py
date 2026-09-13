@@ -46,7 +46,11 @@ def load_extra(path=None):
 EXTRA = load_extra()
 
 
-def word_issues(word, dictionary, extra=None):
+def word_issues(word, dictionary, extra=None, forms=None):
+    """`forms`: GrammarDB's word forms (grammar.load_index). A word the dictionary lacks but GrammarDB
+    lists is a warning, not an error: be-official is GrammarDB's own 2008-spelling export, which leaves
+    out forms whose only source is Піскуноў 2012 («слухаўка») and adjectives from place names
+    («смаленская»)."""
     w = word.lower().replace("’", "'").replace(ACUTE, "")
     extra = EXTRA if extra is None else extra
     issues = []
@@ -64,7 +68,10 @@ def word_issues(word, dictionary, extra=None):
         issues.append(("WARN", "U_SHORT", word))
     if (dictionary is not None and w not in extra
             and not (dictionary.lookup(w) or dictionary.lookup(word.replace(ACUTE, "")))):
-        issues.append(("ERROR", "UNKNOWN_WORD", word))
+        if forms is not None and w in forms:
+            issues.append(("WARN", "NOT_IN_2008_LIST", word))
+        else:
+            issues.append(("ERROR", "UNKNOWN_WORD", word))
     return issues
 
 
@@ -112,7 +119,8 @@ def short_u_issues(line):
     return issues
 
 
-def check_text(text, syllables_per_line=None, rhyme=None, dictionary=None, tolerance=0):
+def check_text(text, syllables_per_line=None, rhyme=None, dictionary=None, tolerance=0, forms=None):
+    """`forms` (optional, grammar.load_index()) turns a dictionary miss GrammarDB lists into a warning."""
     sections, lines = [[]], []
     for n, raw in enumerate(text.splitlines(), 1):
         line = COUNT_RE.sub("", raw).strip()
@@ -126,7 +134,8 @@ def check_text(text, syllables_per_line=None, rhyme=None, dictionary=None, toler
         line = line.split("|")[0].strip()  # bilingual lyrics: judge the Belarusian half
         entry = {"n": n, "text": line, "syllables": syllables(line), "issues": []}
         for word in WORD_RE.findall(line):
-            entry["issues"] += [dict(level=l, code=c, word=w) for l, c, w in word_issues(word, dictionary)]
+            entry["issues"] += [dict(level=l, code=c, word=w)
+                                for l, c, w in word_issues(word, dictionary, forms=forms)]
         entry["issues"] += [dict(level=l, code=c, word=w) for l, c, w in short_u_issues(line)]
         if syllables_per_line and abs(entry["syllables"] - syllables_per_line) > tolerance:
             want = f"{syllables_per_line}±{tolerance}" if tolerance else str(syllables_per_line)

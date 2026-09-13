@@ -159,5 +159,34 @@ class DictionaryTests(unittest.TestCase):
             with self.subTest(word=word):
                 self.assertEqual(check_text(word, dictionary=self.dictionary)["errors"], 0)
 
+
+class GrammarDBFallbackTests(unittest.TestCase):
+    """A word GrammarDB lists but the 2008-spelling dictionary leaves out is a warning, not an error."""
+
+    def issues(self, word, forms):
+        return [(l, c) for l, c, _w in word_issues(word, NothingKnown(), set(), forms)]
+
+    def test_a_listed_word_outside_the_2008_list_is_only_a_warning(self):
+        issues = self.issues("смаленская", {"смаленская": (("A", "F", "N", "S"),)})
+        self.assertIn(("WARN", "NOT_IN_2008_LIST"), issues)
+        self.assertNotIn(("ERROR", "UNKNOWN_WORD"), issues)
+
+    def test_a_word_nobody_lists_is_still_an_error(self):
+        self.assertIn(("ERROR", "UNKNOWN_WORD"), self.issues("паветры", {"паветра": ()}))
+
+    def test_without_forms_the_old_rule_holds(self):
+        self.assertIn(("ERROR", "UNKNOWN_WORD"), self.issues("смаленская", None))
+
+    def test_extra_words_still_pass_without_a_warning(self):
+        issues = [(l, c) for l, c, _w in word_issues("слухаўка", NothingKnown(), {"слухаўка"}, {})]
+        self.assertEqual(issues, [])
+
+    def test_check_text_passes_the_forms_through(self):
+        result = check_text("Смаленская дарога", dictionary=NothingKnown(),
+                            forms={"смаленская": (), "дарога": ()})
+        self.assertEqual(result["errors"], 0)
+        self.assertEqual(result["warnings"], 2)
+
+
 if __name__ == "__main__":
     unittest.main()

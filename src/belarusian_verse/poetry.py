@@ -114,6 +114,10 @@ def analyse(text, rhyme="AABB", lexicon=None):
 
     pairs, seen = [], {}
     for i, line in enumerate(lines):
+        if rhyme and i % len(rhyme) == 0:
+            # A scheme shorter than the song repeats for each stanza. Without this reset «ABCB» paired
+            # every B line with line 2 — a verse line graded against the chorus.
+            seen = {}
         letter = rhyme[i % len(rhyme)] if rhyme else None
         if letter and letter in seen:
             grade, score = grade_rhyme(lines[seen[letter]], line, lexicon)
