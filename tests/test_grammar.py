@@ -82,6 +82,16 @@ class RealSentenceTests(unittest.TestCase):
         text = "[Куплет]\nЦёплы вечар у цішыні. | A warm evening in the quiet"
         self.assertEqual(self.errors(text), 0)
 
+    def test_capitalised_words_do_not_crash_the_checker(self):
+        # a modifier after its noun, capitalised: finding its position used to raise ValueError,
+        # on the second sentence of the MultiBLiMP Belarusian set
+        self.errors("Дзень Цёплы прыйшоў да нас")
+        self.errors("Я Мікіта, мне 19 год, вучуся ў БДУіРы на другім курсе.")
+
+    def test_a_provenance_comment_is_skipped(self):
+        # a `#` note says where a text came from; it is not a line of verse
+        self.assertEqual(self.errors("# Цёплая вечар у цішыні\nЦёплы вечар у цішыні"), 0)
+
 
 if __name__ == "__main__":
     unittest.main()

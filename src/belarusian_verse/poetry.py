@@ -106,7 +106,8 @@ def rhythm_scores(patterns):
 
 def analyse(text, rhyme="AABB", lexicon=None):
     lexicon = lexicon or load_lexicon()
-    lines = [l.strip() for l in text.splitlines() if l.strip() and not l.strip().startswith("[")]
+    lines = [l.strip() for l in text.splitlines()
+             if l.strip() and not l.strip().startswith(("[", "#"))]
     lines = [l.split("|")[0].strip() for l in lines]
     patterns = [syllable_stress(l, lexicon) for l in lines]
     dominant, rhythm = rhythm_scores(patterns)

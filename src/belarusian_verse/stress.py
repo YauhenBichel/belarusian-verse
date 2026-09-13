@@ -79,7 +79,11 @@ def mark_text(text, lexicon, pick_first=False):
             unknown.append((m.group(0), status))
         return word
 
-    return WORD_RE.sub(replace, text), stats, unknown
+    # Section tags and source notes are not sung. Marking them turns «[Куплет]» into «[Купле́т]»,
+    # a tag the singing model no longer recognises as a tag.
+    lines = [line if line.lstrip().startswith(("[", "#")) else WORD_RE.sub(replace, line)
+             for line in text.split("\n")]
+    return "\n".join(lines), stats, unknown
 
 
 def _utf8_stdout():
