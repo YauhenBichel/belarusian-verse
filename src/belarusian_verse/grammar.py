@@ -60,7 +60,7 @@ def readings(word, index, pos):
     return tuple(c for c in index.get(word, ()) if c[0] in pos)
 
 
-def order(a, b, words, index):
+def order(a, b, words, index, at=None):
     """Decide which of the two words modifies which, or None when the pair should be left alone.
 
     Belarusian verse puts the adjective on either side of its noun — "цёплы вечар" and
@@ -73,7 +73,12 @@ def order(a, b, words, index):
     if a_mod and not a_noun and b_noun:          # modifier before its noun
         return a_mod, b_noun
     if b_mod and not b_noun and a_noun:          # modifier after its noun
-        following = words[words.index(b) + 1].lower().replace("’", "'") if words[-1] != b else None
+        # `at` is where b stands. It used to be found with words.index(b), but b is lowercased and
+        # words keep their spelling, so any capitalised word or apostrophe raised ValueError.
+        if at is None:
+            lowered = [w.lower().replace("’", "'") for w in words]
+            at = lowered.index(b) if b in lowered else len(words) - 1
+        following = words[at + 1].lower().replace("’", "'") if at + 1 < len(words) else None
         # only an unambiguous noun can claim the modifier; "тут" reads as an adverb here
         if following and not readings(following, index, "X") and readings(following, index, "N"):
             return None                          # it belongs to the next noun instead
@@ -122,7 +127,7 @@ def check_line(line, index):
     issues = []
     words = [w for w in WORD_RE.findall(line)]
     issues += check_subject_verb(words, index)
-    for first, second in zip(words, words[1:]):
+    for i, (first, second) in enumerate(zip(words, words[1:])):
         a, b = first.lower().replace("’", "'"), second.lower().replace("’", "'")
         if a in PERSONAL or b in PERSONAL or a not in index or b not in index:
             continue
@@ -130,7 +135,7 @@ def check_line(line, index):
         # this pair, so leave it alone rather than raise a false alarm
         if any(c[0] == "X" for c in index[a]) or any(c[0] == "X" for c in index[b]):
             continue
-        pair = order(a, b, words, index)
+        pair = order(a, b, words, index, at=i + 1)
         if not pair:
             continue
         modifier, noun = pair
@@ -146,7 +151,7 @@ def check_text(text, index=None):
     lines = []
     for n, raw in enumerate(text.splitlines(), 1):
         line = raw.strip()
-        if not line or line.startswith("["):
+        if not line or line.startswith(("[", "#")):   # a section tag or a provenance note
             continue
         line = line.split("|")[0].strip()
         lines.append({"n": n, "text": line, "issues": check_line(line, index)})

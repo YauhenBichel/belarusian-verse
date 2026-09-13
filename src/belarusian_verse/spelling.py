@@ -6,6 +6,7 @@ Exit code 0 when there are no ERROR issues, 1 otherwise.
 """
 import argparse
 import json
+import os
 import re
 import sys
 
@@ -22,8 +23,32 @@ RHYME_NORM = str.maketrans({"я": "а", "ю": "у", "е": "э", "ё": "о", "і"
 ACUTE = "́"  # stress mark from be_stress.py: not part of the spelling
 
 
-def word_issues(word, dictionary):
+def load_extra(path=None):
+    """Real Belarusian words the Hunspell dictionary is missing (extra-words.txt).
+
+    The dictionary has gaps — слухаўка is an ordinary word and is not in it — and without a way to
+    fill them the only way to get a line past the checker is to weaken the checker. Each entry is
+    a form GrammarDB lists, not a word a model produced.
+    """
+    path = path or os.path.join(os.path.dirname(os.path.abspath(__file__)), "extra-words.txt")
+    words = set()
+    try:
+        with open(path, encoding="utf-8") as handle:
+            for line in handle:
+                word = line.split("#")[0].strip().lower()
+                if word:
+                    words.add(word)
+    except OSError:
+        pass
+    return frozenset(words)
+
+
+EXTRA = load_extra()
+
+
+def word_issues(word, dictionary, extra=None):
     w = word.lower().replace("’", "'").replace(ACUTE, "")
+    extra = EXTRA if extra is None else extra
     issues = []
     bad = sorted({c for c in w if c.isalpha() and c not in LETTERS})
     if bad:
@@ -37,7 +62,8 @@ def word_issues(word, dictionary):
         issues.append(("WARN", "MULTI_O", word))
     if any(a in VOWELS and b == "у" and c in CONSONANTS for a, b, c in zip(w, w[1:], w[2:])):
         issues.append(("WARN", "U_SHORT", word))
-    if dictionary is not None and not (dictionary.lookup(w) or dictionary.lookup(word.replace(ACUTE, ""))):
+    if (dictionary is not None and w not in extra
+            and not (dictionary.lookup(w) or dictionary.lookup(word.replace(ACUTE, "")))):
         issues.append(("ERROR", "UNKNOWN_WORD", word))
     return issues
 
@@ -60,19 +86,28 @@ def short_u_issues(line):
     "Я іду ў школу", never "іду у школу"; "стаў у хаце", never "стаў ў хаце". The rule holds
     across the whole line, which is why a word-by-word checker never sees it. After a full stop,
     a question or exclamation mark the pause resets it and у stays у.
+
+    The same rule governs a word that begins with у: «яна ўсё ведае», never «яна усё»; «тут усё»,
+    never «тут ўсё». Abbreviations keep their у («у УНП» is read letter by letter), so all-capital
+    words are skipped.
     """
     issues = []
-    tokens = re.findall(r"[^\W\d_]+|[.!?…]", line.lower())
+    tokens = re.findall(r"[^\W\d_]+|[.!?…]", line)
     previous = None
-    for token in tokens:
+    for raw in tokens:
+        token = raw.lower()
         if token in ".!?…":
             previous = None
             continue
-        if token == "у" and previous and previous[-1] in VOWELS:
-            issues.append(("ERROR", "SHOULD_BE_U_SHORT", f"у after «{previous}» should be ў"))
-        elif token == "ў" and (previous is None or previous[-1] not in VOWELS):
+        after_vowel = bool(previous) and previous[-1] in VOWELS
+        abbreviation = len(raw) > 1 and raw.isupper()
+        if token[0] == "у" and after_vowel and not abbreviation:
+            issues.append(("ERROR", "SHOULD_BE_U_SHORT", f"у after «{previous}» should be ў"
+                           if token == "у" else f"«{raw}» after «{previous}» should start with ў"))
+        elif token[0] == "ў" and not after_vowel:
             after = f"after «{previous}»" if previous else "at the start"
-            issues.append(("ERROR", "SHOULD_BE_U_LONG", f"ў {after} should be у"))
+            issues.append(("ERROR", "SHOULD_BE_U_LONG", f"ў {after} should be у"
+                           if token == "ў" else f"«{raw}» {after} should start with у"))
         previous = token
     return issues
 
@@ -82,6 +117,8 @@ def check_text(text, syllables_per_line=None, rhyme=None, dictionary=None, toler
     for n, raw in enumerate(text.splitlines(), 1):
         line = COUNT_RE.sub("", raw).strip()
         if not line:
+            continue
+        if line.startswith("#"):   # a provenance note, not a line of the song
             continue
         if line.startswith("["):
             sections.append([])

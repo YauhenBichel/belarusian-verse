@@ -1,0 +1,11 @@
+# Real Belarusian word forms the be-official Hunspell dictionary does not list.
+# One form per line; `#` starts a comment. Every entry is listed in the Belarusian Grammar Database
+# (https://github.com/Belarus/GrammarDB, the source of be-forms.tsv.gz). Add a form here only after
+# finding it there, never to silence a word a model invented; the checker exists to refuse those.
+
+слухаўка      # telephone receiver (N:F:N:S); the dictionary has слухаць but not this noun
+слухаўкі      # N:F:G:S, N:F:N:P, N:F:A:P
+слухаўку      # N:F:A:S
+слухаўкай     # N:F:I:S
+слухаўцы      # N:F:D:S, N:F:L:S
+гучыш         # 2nd person singular of гучаць (V:0:2:S); the dictionary has only гучыць

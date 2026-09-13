@@ -62,6 +62,11 @@ class RhymeTests(unittest.TestCase):
         result = analyse("Сосны стаяць у цішы маёй, | Pine trees stand in my silence", "A", self.lex)
         self.assertEqual(result["lines"][0]["text"], "Сосны стаяць у цішы маёй,")
 
+    def test_a_provenance_comment_is_not_a_line(self):
+        result = analyse("# Казлоў 1827\nВячэрні звон, вячэрні звон!\nЯк многа дум наводзіць ён",
+                         "AA", self.lex)
+        self.assertEqual(len(result["lines"]), 2)
+
 
 if __name__ == "__main__":
     unittest.main()

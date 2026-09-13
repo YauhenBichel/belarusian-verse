@@ -5,7 +5,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 
-from belarusian_verse.spelling import short_u_issues, check_text, load_dictionary, rhyme_key, syllables  # noqa: E402
+from belarusian_verse.spelling import (short_u_issues, check_text, load_dictionary, load_extra,  # noqa: E402
+                                       rhyme_key, syllables, word_issues)
 
 SAMPLES = ROOT / "experiments" / "2026-09-11-belarusian-lyrics" / "samples"
 
@@ -30,6 +31,68 @@ class ShortUTests(unittest.TestCase):
 
     def test_a_full_stop_resets_the_rule(self):
         self.assertEqual(self.codes("Дождж ідзе. У хаце цёпла"), set())
+
+
+class WordInitialUTests(unittest.TestCase):
+    """The у/ў rule reaches words that begin with у, not only the preposition."""
+
+    def codes(self, line):
+        return [code for _level, code, _word in short_u_issues(line)]
+
+    def test_short_u_word_after_a_consonant_is_wrong(self):
+        self.assertIn("SHOULD_BE_U_LONG", self.codes("Лета нас тут ўсё запрашае"))
+
+    def test_long_u_word_after_a_consonant_is_right(self):
+        self.assertEqual(self.codes("Лета нас тут усё запрашае"), [])
+
+    def test_long_u_word_after_a_vowel_is_wrong(self):
+        self.assertIn("SHOULD_BE_U_SHORT", self.codes("Яна усё ведае"))
+
+    def test_short_u_word_after_a_vowel_is_right(self):
+        self.assertEqual(self.codes("Яна ўсё ведае"), [])
+
+    def test_a_line_may_not_start_with_a_short_u_word(self):
+        self.assertIn("SHOULD_BE_U_LONG", self.codes("Ўсё будзе добра"))
+
+    def test_an_abbreviation_keeps_its_u(self):
+        # «УНП» is read letter by letter, so it keeps its у after a vowel
+        self.assertEqual(self.codes("Яна УНП ведае"), [])
+
+
+class ProvenanceTests(unittest.TestCase):
+    """Public-domain lyrics carry a `#` note saying where the text came from."""
+
+    def test_a_comment_is_not_checked_as_a_line(self):
+        text = "# Казлоў 1827, грамадскі набытак\nВячэрні звон, вячэрні звон!"
+        self.assertEqual([l["text"] for l in check_text(text)["lines"]], ["Вячэрні звон, вячэрні звон!"])
+
+
+class NothingKnown:
+    """A dictionary that knows no word at all."""
+
+    def lookup(self, _word):
+        return False
+
+
+class ExtraWordsTests(unittest.TestCase):
+    """extra-words.txt fills the dictionary's gaps without weakening the checker."""
+
+    def test_the_file_loads_and_holds_a_known_gap(self):
+        # слухаўка is an ordinary word (a telephone receiver) that be-official does not list
+        self.assertIn("слухаўка", load_extra())
+
+    def test_comments_and_blank_lines_are_not_words(self):
+        words = load_extra()
+        self.assertNotIn("", words)
+        self.assertFalse([w for w in words if w.startswith("#") or " " in w])
+
+    def test_a_supplemented_word_is_accepted(self):
+        codes = [c for _l, c, _w in word_issues("Слухаўка", NothingKnown(), {"слухаўка"})]
+        self.assertNotIn("UNKNOWN_WORD", codes)
+
+    def test_an_invented_word_is_still_refused(self):
+        codes = [c for _l, c, _w in word_issues("зяленіцься", NothingKnown(), {"слухаўка"})]
+        self.assertIn("UNKNOWN_WORD", codes)
 
 
 class RuleTests(unittest.TestCase):
@@ -89,6 +152,12 @@ class DictionaryTests(unittest.TestCase):
     def test_invented_words_are_caught(self):
         result = check_text("шклярана навокны цяплёў", dictionary=self.dictionary)
         self.assertEqual(result["errors"], 3)
+
+    def test_real_words_missing_from_the_dictionary_pass(self):
+        # GrammarDB lists these forms; be-official does not
+        for word in ("слухаўка", "слухаўкі", "слухаўку", "слухаўкай", "слухаўцы", "гучыш"):
+            with self.subTest(word=word):
+                self.assertEqual(check_text(word, dictionary=self.dictionary)["errors"], 0)
 
 if __name__ == "__main__":
     unittest.main()

@@ -45,6 +45,14 @@ class StressTests(unittest.TestCase):
         marked, _, _ = mark_text(text, self.lex)
         self.assertEqual(syllables(marked), syllables(text))
 
+    def test_section_tags_and_notes_are_left_alone(self):
+        # «[Купле́т]» is no longer a tag a singing model recognises
+        marked, _stats, _unknown = mark_text("# Казлоў 1827\n[Куплет]\nВячэрні звон", self.lex)
+        lines = marked.split("\n")
+        self.assertEqual(lines[0], "# Казлоў 1827")
+        self.assertEqual(lines[1], "[Куплет]")
+        self.assertIn(ACUTE, lines[2])
+
 
 class PassThroughTests(unittest.TestCase):
     def test_checker_ignores_stress_marks(self):
