@@ -35,9 +35,13 @@ Belarusian has good dictionaries and good speech models, and little in between:
 - a spell checker accepts every real word, so «ідзе́ / зна́йдзе» passes as a rhyme even though the
   two words are stressed on different syllables.
 
-Everything needed was already inside the [Belarusian Grammar Database](https://github.com/Belarus/GrammarDB):
-stress marks and full morphological tags for millions of forms. This library is those tables plus
-the rules that make them answer musical questions.
+Everything needed was already inside the [Belarusian Grammar Database](https://github.com/Belarus/GrammarDB)
+(CC BY-SA 4.0), part of the **National Corpus of the Belarusian Language**,
+[bnkorpus.info](https://bnkorpus.info/): stress marks and full morphological tags for millions of
+forms. This library is those tables plus the rules that make them answer musical questions. That
+corpus project also publishes a 177-million-token corpus with audio search, the phonetic converter
+[BelG2P](https://github.com/Belarus/BelG2P) and a spell checker — the place to look first for
+anything Belarusian.
 
 ## Install
 
@@ -152,6 +156,13 @@ Two more sources are downloaded at run time and never shipped with the package:
 - **The Belarusian Homographs Stress Benchmark**, used only by `stress_benchmark`, created for
   BelVoice by Aleś Bułojčyk and contributors, **CC BY-SA 4.0**:
   https://huggingface.co/datasets/alex73/benchmarks-stress-bel (revision `94bb5a8`).
+
+## Where it is used
+
+Every lyric of **Ahni Trasy / Агні трасы** goes through these checks — stress, rhyme, rhythm and
+agreement — before a single note is sung:
+[«Chary Nochy» on Spotify](https://open.spotify.com/album/1RG2w6mCmm4GkbOHMQNUse) · [@y6574694 on TikTok](https://www.tiktok.com/@y6574694).
+The vocals there are AI-generated and labelled as such.
 
 ## Tests
 
