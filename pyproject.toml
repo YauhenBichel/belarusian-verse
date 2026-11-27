@@ -27,6 +27,7 @@ spelling = ["spylls>=0.1.7"]
 [project.urls]
 Homepage = "https://github.com/YauhenBichel/belarusian-verse"
 Dataset = "https://huggingface.co/datasets/YauhenBichel/belarusian-verse"
+Issues = "https://github.com/YauhenBichel/belarusian-verse/issues"
 
 [project.scripts]
 be-stress = "belarusian_verse.stress:main"
