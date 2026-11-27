@@ -8,7 +8,7 @@
 [![Contributors](https://img.shields.io/github/contributors/YauhenBichel/belarusian-verse)](https://github.com/YauhenBichel/belarusian-verse/graphs/contributors)
 
 Belarusian **stress, rhyme, rhythm, agreement and spelling** — the checks you need to write or
-judge a line of Belarusian verse, as a small Python library.
+judge a line of Belarusian verse, as a small Python library for poets, lyricists and NLP developers working with Belarusian text.
 
 The tables behind it — about 2 million word forms — are published separately as
 [🤗 **YauhenBichel/belarusian-verse**](https://huggingface.co/datasets/YauhenBichel/belarusian-verse)
@@ -67,13 +67,18 @@ Set `BELARUSIAN_VERSE_DATA` to a folder holding the tables to work offline. Put 
 
 Each is also a command: `be-stress`, `be-poetry`, `be-grammar`, `be-spelling`, `be-respell`, `be-rhymes`.
 
-```bash
+```console
 $ be-poetry verse.txt --rhyme AABB
- 1 100111001    rhythm 1.00  Белы туман па лесе плыве,
- 2 101000101    rhythm 0.44  Свежасць ранішняя тут жыве.
+ 1 100111001    rhythm 0.78  Белы туман па лесе плыве,
+ 2 101000101    rhythm 0.67  Свежасць ранішняя тут жыве.
+dominant rhythm: 101111101
 rhyme 1-2: rich (1.0)
-rhyme 0.95  rhythm 0.78
+rhyme 1.0  rhythm 0.73
 ```
+
+![be-poetry output for a two-line verse: rhythm per line and a rich rhyme](docs/be-poetry.svg)
+
+(`verse.txt` holds those two lines. Output captured from `belarusian-verse` 0.3.0 installed from PyPI.)
 
 ## What it checks that a spell checker cannot
 
@@ -139,6 +144,37 @@ order explicitly.
 - Preposition government (`да` wants the genitive, `у` the accusative or locative) is not checked.
 - Rhyme suggestions are ranked by Wikipedia frequency, which leans encyclopaedic: place names are
   commoner there than in song.
+
+## FAQ
+
+### How do I check whether two Belarusian words rhyme?
+
+`pip install belarusian-verse`, then `rhyme("вадзе", "ідзе")` returns `('rich', 1.0)`. From a shell, use
+`be-poetry verse.txt --rhyme AABB` for a whole verse.
+
+### How do I find where the stress falls in a Belarusian word?
+
+Use `mark_stress(text)` or the `be-stress` command. A homograph with several stresses is left unmarked unless you
+pass `pick_first=True` or your own overrides file.
+
+### Does it send my text anywhere?
+
+No. Your text is processed on your machine. On first use the library downloads its tables from the Hugging Face
+dataset above, and BelVoice's stress table from GitHub, then caches them. Set `BELARUSIAN_VERSE_DATA` to work offline.
+
+### How is it different from LanguageTool or a spell checker?
+
+A spell checker accepts every real word and cannot tell that «ідзе́» and «зна́йдзе» do not rhyme. This library
+works from stress and morphology, so it can judge rhyme, rhythm and agreement. It is not a full grammar checker; see
+Limits below.
+
+### Does it check meaning or syntax?
+
+No. It checks adjacent pairs for agreement and does not parse sentences. A line can pass every check and say nothing.
+
+### Is it a speech or text-to-speech model?
+
+No. `respell` only rewrites text so a Ukrainian- or Russian-trained model pronounces it, keeping the syllable count.
 
 ## Data and licence
 
